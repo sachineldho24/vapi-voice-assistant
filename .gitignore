@@ -1,0 +1,9 @@
+node_modules/
+.env
+npm-debug.log*
+# Runtime audit log stays local; audit_sample.jsonl is the committed, redacted excerpt.
+logs/
+tunnel.log
+recordings/
+*.mp4
+*.mp3

@@ -1,0 +1,17 @@
+{
+  "name": "kapture-finance-maya-voicebot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mock Vapi tool server and evaluation pack for the Kapture Finance collections voicebot assignment",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tests.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

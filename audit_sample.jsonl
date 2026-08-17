@@ -1,0 +1,8 @@
+{"timestamp":"2026-08-15T13:41:13.689Z","call_id":"demo-auth-lock","tool":"get_account_details","args":{},"outcome":"access_denied","reason":"AUTH_REQUIRED"}
+{"timestamp":"2026-08-15T13:41:13.704Z","call_id":"demo-auth-lock","tool":"send_payment_link","args":{"channel":"SMS"},"outcome":"access_denied","reason":"AUTH_REQUIRED"}
+{"timestamp":"2026-08-15T13:41:13.710Z","call_id":"demo-auth-lock","tool":"verify_customer","args":{"verification_value":"[REDACTED]","verification_type":"DOB_FULL"},"outcome":"success","reason":null}
+{"timestamp":"2026-08-15T13:41:13.714Z","call_id":"demo-auth-lock","tool":"get_account_details","args":{},"outcome":"success","reason":null}
+{"timestamp":"2026-08-15T13:41:13.737Z","call_id":"different-call","tool":"get_account_details","args":{},"outcome":"access_denied","reason":"AUTH_REQUIRED"}
+{"timestamp":"2026-08-15T16:02:48.129Z","call_id":"webhook-idempotency","tool":"get_account_details","args":{},"outcome":"access_denied","reason":"AUTH_REQUIRED"}
+{"timestamp":"2026-08-15T16:02:48.149Z","call_id":"webhook-idempotency","tool":"verify_customer","args":{"verification_type":"DOB_FULL","verification_value":"[REDACTED]"},"outcome":"success","reason":null}
+{"timestamp":"2026-08-15T16:02:48.167Z","call_id":"webhook-idempotency","tool":"log_promise_to_pay","args":{"amount":8499,"ptp_date":"2026-08-18","payment_type":"FULL"},"outcome":"success","reason":null}

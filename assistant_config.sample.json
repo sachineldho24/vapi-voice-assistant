@@ -1,0 +1,81 @@
+{
+  "name": "Maya - Kapture Finance Collections",
+  "firstMessageMode": "assistant-speaks-first",
+  "firstMessage": "Hello, this is Maya calling from Kapture Finance. Am I speaking with Rahul Sharma?",
+  "transcriber": {
+    "provider": "deepgram",
+    "model": "nova-3",
+    "language": "multi"
+  },
+  "model": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "temperature": 0.1,
+    "messages": [{ "role": "system", "content": "PASTE system_prompt.txt HERE" }],
+    "toolIds": [
+      "<verify_tool_id>",
+      "<account_tool_id>",
+      "<ptp_tool_id>",
+      "<payment_link_tool_id>",
+      "<escalation_tool_id>",
+      "<disposition_tool_id>"
+    ],
+    "tools": [{ "type": "endCall" }, { "type": "voicemail" }]
+  },
+  "voice": {
+    "provider": "11labs",
+    "voiceId": "sarah"
+  },
+  "server": {
+    "url": "https://economics-saturday-kansas-baths.trycloudflare.com/webhook",
+    "credentialId": "<bearer_credential_id>"
+  },
+  "serverMessages": ["tool-calls", "end-of-call-report", "status-update"],
+  "clientMessages": ["transcript", "tool-calls", "status-update"],
+  "silenceTimeoutSeconds": 30,
+  "maxDurationSeconds": 300,
+  "startSpeakingPlan": { "waitSeconds": 0.4 },
+  "stopSpeakingPlan": { "numWords": 2, "voiceSeconds": 0.2 },
+  "analysisPlan": {
+    "summaryPlan": { "enabled": true },
+    "structuredDataPlan": {
+      "enabled": true,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "final_disposition": {
+            "type": "string",
+            "enum": ["PTP", "ALREADY_PAID", "DISPUTE_ESCALATED", "HARDSHIP_ESCALATED", "CALLBACK_REQUESTED", "DO_NOT_CALL", "WRONG_PERSON", "WRONG_NUMBER", "AUTH_FAILED", "AUTH_REFUSED", "NO_INPUT", "VOICEMAIL", "HOSTILE_ENDED", "TECHNICAL_FAILURE"],
+            "description": "The business outcome, copied from the status argument of the mark_disposition tool call. This is never the telephony end reason: assistant-ended-call, customer-ended-call and silence-timed-out are all wrong values here. Use TECHNICAL_FAILURE if mark_disposition was never called."
+          },
+          "authenticated": {
+            "type": "boolean",
+            "description": "True only when a verify_customer tool call returned status success during this call. A failed or refused verification is false."
+          },
+          "ptp_date": {
+            "type": ["string", "null"],
+            "description": "Copy the ptp_date argument of the log_promise_to_pay tool call verbatim. It is already ISO 8601 YYYY-MM-DD, so do not reformat it, do not recompute it from what was said aloud, and never substitute a year of your own: if the argument reads 2026-08-29 the answer is 2026-08-29 and not 2024-08-29. Null when log_promise_to_pay was never called, even if a date was discussed. If log_promise_to_pay was called more than once, use the last one."
+          },
+          "ptp_amount": {
+            "type": ["number", "null"],
+            "description": "Copy the amount argument of the log_promise_to_pay tool call as a bare number of rupees. Use only that argument. Never derive a figure from the conversation, and never halve, round or otherwise compute one: an amount the customer merely proposed, or half of the overdue balance, is wrong here. Null when log_promise_to_pay was never called. If it was called more than once, use the last one."
+          },
+          "escalation_reason": {
+            "type": ["string", "null"],
+            "description": "The reason argument of escalate_to_agent when the call was handed to a human. Null when no escalation occurred."
+          }
+        },
+        "required": ["final_disposition", "authenticated"]
+      }
+    }
+  },
+  "notes": [
+    "endCall and voicemail are native Vapi tools and belong in model.tools. The six custom Function tools are attached by ID in model.toolIds after scripts/vapi_provision.mjs creates them.",
+    "This build deliberately does not set assistant-level voicemailDetection. Current Vapi guidance is to attach the native voicemail tool instead and keep the neutral voicemail wording in the system prompt.",
+    "server.credentialId points at a Bearer Token credential created in Dashboard > Settings > Integrations > Server Configuration. Its token must match WEBHOOK_TOKEN on the mock server, which checks the Authorization header. The token itself never appears in this file.",
+    "Each of the six custom tools also carries its own server.url and receives credentialId during provisioning. Vapi resolves tool server configuration before assistant server configuration, so tool calls do not rely on cross-scope credential fallback; the assistant-level server also receives end-of-call-report and status-update.",
+    "Calling-window, consent, frequency-cap and DNC suppression enforcement live in the campaign/dialer policy service, not in this assistant.",
+    "maxDurationSeconds stays at 300 on purpose (see README). The gap was never the cap, it was that a call cut off by the cap reached no mark_disposition, so the server now closes out any call whose end-of-call-report arrives without a terminal disposition and records TECHNICAL_FAILURE against it.",
+    "Deepgram keyterm prompting would pin the spelling of the brand name in transcripts, but on nova-3 it is an English-only feature and this build needs language 'multi' for the Hindi/Hinglish requirement. Transcript spelling loses to bilingual support: 'Kapture' and 'Capture' are homophones, so the spelling in a transcript costs nothing that the customer can hear."
+  ]
+}

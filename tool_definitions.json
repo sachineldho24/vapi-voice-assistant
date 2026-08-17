@@ -1,0 +1,112 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "verify_customer",
+      "description": "Verify the intended customer. This is the only operation that can unlock account disclosure for the current call.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "verification_type": {
+            "type": "string",
+            "enum": ["DOB_FULL", "PAN_LAST4"]
+          },
+          "verification_value": {
+            "type": "string",
+            "description": "Customer-provided factor. Never repeat it in speech or log it."
+          }
+        },
+        "required": ["verification_type", "verification_value"],
+        "additionalProperties": false
+      }
+    },
+    "server": { "url": "https://economics-saturday-kansas-baths.trycloudflare.com/webhook" }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "get_account_details",
+      "description": "Return account and debt details only after verify_customer succeeds for this exact Vapi call ID. Returns no debt data when denied.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    "server": { "url": "https://economics-saturday-kansas-baths.trycloudflare.com/webhook" }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "log_promise_to_pay",
+      "description": "Record a validated promise to pay after authentication and an explicit customer confirmation.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "amount": { "type": "number", "minimum": 1 },
+          "ptp_date": { "type": "string", "description": "Absolute ISO date YYYY-MM-DD; never pass Friday/tomorrow." },
+          "payment_type": { "type": "string", "enum": ["FULL", "PARTIAL"] }
+        },
+        "required": ["amount", "ptp_date", "payment_type"],
+        "additionalProperties": false
+      }
+    },
+    "server": { "url": "https://economics-saturday-kansas-baths.trycloudflare.com/webhook" }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "send_payment_link",
+      "description": "Queue a secure payment link through an approved channel after authentication. Never dictate a raw URL or collect payment credentials by voice.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "channel": { "type": "string", "enum": ["SMS", "WHATSAPP"] }
+        },
+        "required": ["channel"],
+        "additionalProperties": false
+      }
+    },
+    "server": { "url": "https://economics-saturday-kansas-baths.trycloudflare.com/webhook" }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "escalate_to_agent",
+      "description": "Create a human or grievance handoff for a dispute, hardship, policy exception, or technical failure.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "reason": { "type": "string", "enum": ["DISPUTE", "HARDSHIP", "POLICY_EXCEPTION", "TECHNICAL_FAILURE"] },
+          "notes": { "type": "string", "maxLength": 500 }
+        },
+        "required": ["reason"],
+        "additionalProperties": false
+      }
+    },
+    "server": { "url": "https://economics-saturday-kansas-baths.trycloudflare.com/webhook" }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "mark_disposition",
+      "description": "Persist the final outcome of every call. Call exactly once on a terminal path.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["PTP", "ALREADY_PAID", "DISPUTE_ESCALATED", "HARDSHIP_ESCALATED", "CALLBACK_REQUESTED", "DO_NOT_CALL", "WRONG_PERSON", "WRONG_NUMBER", "AUTH_FAILED", "AUTH_REFUSED", "NO_INPUT", "VOICEMAIL", "HOSTILE_ENDED", "TECHNICAL_FAILURE"]
+          },
+          "notes": { "type": "string", "maxLength": 800 },
+          "ptp_date": { "type": "string", "description": "Optional ISO date for PTP outcomes." },
+          "ptp_amount": { "type": "number", "minimum": 0 },
+          "channel": { "type": "string", "enum": ["VOICE", "SMS", "WHATSAPP"] }
+        },
+        "required": ["status"],
+        "additionalProperties": false
+      }
+    },
+    "server": { "url": "https://economics-saturday-kansas-baths.trycloudflare.com/webhook" }
+  }
+]
