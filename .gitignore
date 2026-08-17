@@ -1,5 +1,6 @@
 node_modules/
 .env
+.env.local
 npm-debug.log*
 # Runtime audit log stays local; audit_sample.jsonl is the committed, redacted excerpt.
 logs/
@@ -7,3 +8,21 @@ tunnel.log
 recordings/
 *.mp4
 *.mp3
+.vercel/
+web/.vercel/
+# Written by the Vercel CLI inside web/; its patterns are already covered here.
+web/.gitignore
+
+# Local working files, deliberately not part of the submitted repo. They are my own
+# prep and build tooling, not something a reviewer needs to read or run: the
+# committed PDF and PNGs are the artefacts those generators produce.
+SUBMISSION_CHECKLIST.md
+TASK2_RUNBOOK.md
+CALL_SCRIPTS.md
+demo_script.md
+HLD_Document.docx
+scripts/render_hld.py
+scripts/make_diagrams.py
+scripts/make_archive.py
+scripts/chat_probe.mjs
+scripts/place_call.mjs

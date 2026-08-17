@@ -150,7 +150,7 @@ async function main() {
   console.log(
     numbers.length
       ? `  ${numbers.length} number(s): ${numbers.map((n) => `${n.number} (${n.provider})`).join(", ")} - outbound phone calls possible`
-      : "  no phone number on the account - browser calls only (scripts/place_call.mjs explains)"
+      : "  no phone number on the account - browser calls only (see the README's limitations section)"
   );
 
   console.log(

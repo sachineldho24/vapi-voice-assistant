@@ -1,0 +1,11 @@
+# The rendered HLD, the DOCX and the diagrams are binaries. Git for Windows
+# defaults to core.autocrlf=true, and a checkout that "fixes" line endings in
+# these would silently produce an unopenable PDF. Nothing here enables
+# text=auto, so no existing text file is renormalized.
+*.pdf binary
+*.docx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.mp3 binary
+*.mp4 binary

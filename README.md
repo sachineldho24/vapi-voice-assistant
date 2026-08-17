@@ -10,16 +10,12 @@ The central safety decision is architectural: the tool server holds authenticati
 
 Design and evidence
 
-- `HLD_Document.md` - engineer-facing high-level design (source of truth for the PDF/DOCX).
-- `HLD_Document.pdf`, `HLD_Document.docx` - rendered copies for submission.
+- `HLD_Document.md` - engineer-facing high-level design, readable in the browser.
+- `HLD_Document.pdf` - the same document rendered for submission (Task 1 deliverable).
 - `architecture.png` - components and data flow, with the auth lock on the tool server.
 - `state_machine.png` - the eight call states and the server-enforced transition locks.
 - `auth_sequence.png` - a pre-auth request being denied, then the same call succeeding after verification.
 - `audit_sample.jsonl` - redacted excerpt of a real local run showing the lock firing and per-call isolation.
-- `demo_script.md` - recording plan for the three demo paths.
-- `CALL_SCRIPTS.md` - the verbatim customer lines for every case in the matrix, with the tell that fails each one.
-- `TASK2_RUNBOOK.md` - the ordered path from a locally-proven server to a recorded call.
-- `SUBMISSION_CHECKLIST.md` - what still has to be done by hand.
 
 Assistant definition
 
@@ -35,7 +31,7 @@ Implementation and tests
 - `test_cases.json` - 28 functional, compliance and red-team cases with `must_call` / `must_not_call` / `forbidden_phrases`.
 - `test_webhook.ps1`, `test_webhook.sh` - curl-level auth-lock smoke test. Both read `WEBHOOK_TOKEN` from `.env` when the shell does not set one, so the protected local endpoint can be exercised without handling the token by hand; `BASE` retargets them at the public URL.
 - `webcall.html` - browser call console served at `/webcall`: live transcript beside the tool-call stream, so the auth lock is visible while the call happens.
-- `web/` - a deployable static copy for a public URL: `web/index.html` is the project page, `web/call.html` is the same call console, and the three diagrams and the HLD PDF sit beside them. No build step and no server - the console talks to Vapi directly from the browser, so it only needs HTTPS for microphone access. `vercel.json` points a Vercel project at this directory.
+- `web/` - a deployable static copy for a public URL: `web/index.html` is the project page, `web/call.html` is the same call console, and the three diagrams and the HLD PDF sit beside them. No build step and no server - the console talks to Vapi directly from the browser, so it only needs HTTPS for microphone access. `web/vercel.json` carries the headers the live deployment serves, including the `microphone=(self)` permissions policy; the root `vercel.json` is the equivalent for importing this repository at its root, where `outputDirectory` points at `web/`.
 - `package.json`, `.env.example` - dependencies and configuration.
 
 Scripts
@@ -45,12 +41,7 @@ Scripts
 - `scripts/vapi_provision.mjs` - creates or updates the six tools and the assistant over the Vapi API.
 - `scripts/verify_live.mjs` - reads the live Vapi configuration back and compares it against `tool_definitions.json`, `assistant_config.sample.json` and `system_prompt.txt`, because a provisioning script reporting success only proves the request was accepted.
 - `scripts/test_close_out.mjs` - regression test for the end-of-call close-out and promise supersession, run against a live server.
-- `scripts/chat_probe.mjs` - text-channel red team over `POST /chat`; unrun on this org, which lacks the payment method Vapi requires for chat.
 - `scripts/tail_audit.mjs` - reads `logs/audit.jsonl` as an aligned per-call tool trace and follows it live; the pane to keep on screen during a call.
-- `scripts/place_call.mjs` - places an outbound phone call, or reports why the account cannot yet.
-- `scripts/make_diagrams.py` - regenerates `state_machine.png` and `auth_sequence.png`.
-- `scripts/render_hld.py` - re-renders `HLD_Document.pdf` and `.docx` from the markdown, so the rendered copies cannot drift from the source.
-- `scripts/make_archive.py` - builds the submission ZIP reproducibly and fails if an entry is stale, uses a backslash, or comes from `.env`, `logs/` or `node_modules/`.
 
 ## Run locally
 
@@ -128,9 +119,8 @@ node scripts/verify_live.mjs
 
 # 6. Speak to it. The dashboard's "Talk to Assistant" button works with no setup;
 #    http://localhost:3000/webcall shows the transcript and the tool calls together,
-#    which is what belongs on screen in the recording. CALL_SCRIPTS.md has the lines.
+#    which is what belongs on screen in the recording.
 node scripts/tail_audit.mjs                    # keep this visible during the call
-node scripts/place_call.mjs                    # phone instead of browser, if a number exists
 ```
 
 `vapi_provision.mjs` inlines `system_prompt.txt` into `model.messages[0]`, substitutes the real tool IDs into `model.toolIds`, keeps the native `endCall` and `voicemail` tools in `model.tools`, and strips the human-facing `notes` array from the config. It refuses to run while the placeholder host is still unstamped.
@@ -176,7 +166,7 @@ For testing at scale, the matrix maps directly onto **Vapi Simulations**: each c
 
 `audit_sample.jsonl` is a redacted excerpt of an actual local run. Read it top to bottom: `get_account_details` and `send_payment_link` are denied on call `demo-auth-lock`, `verify_customer` then succeeds with the factor value already replaced by `[REDACTED]`, `get_account_details` succeeds on that same call - and the very next line shows call `different-call` still denied, which is the per-call isolation claim rather than a global flag.
 
-Two scripts cover what `npm test` cannot reach. `scripts/test_close_out.mjs` runs against a live server and pins the robustness behaviour from items 14 and 18 - the end-of-call close-out, promise supersession, the closed-call lock and disposition supersession - in thirty-nine assertions across nine call scenarios, all of which are invisible in a demo because they only show up when a call goes wrong. `scripts/chat_probe.mjs` is the text-channel red team: the same model, the same system prompt and the same tools over `POST /chat`, which checks branch selection and tool arguments in seconds instead of a four-minute take. It is unrun here - `/chat` answers `402 payment_method_missing`, being pay-as-you-go only, and this org is on free credits - so items 15-17 and the conversational half of 18-20 are prompt changes whose verification needs a voice call rather than a text one.
+One script covers what `npm test` cannot reach. `scripts/test_close_out.mjs` runs against a live server and pins the robustness behaviour from items 14 and 18 - the end-of-call close-out, promise supersession, the closed-call lock and disposition supersession - in thirty-nine assertions across nine call scenarios, all of which are invisible in a demo because they only show up when a call goes wrong. Everything above that line is a conversational check, so items 15-17 and the conversational half of 18-20 were verified by voice call: Vapi's text channel would have been the cheap way to red-team branch selection and tool arguments in seconds rather than a four-minute take, but `POST /chat` answers `402 payment_method_missing` on this org, being pay-as-you-go only while the account is on free credits.
 
 ## What broke and how I debugged it
 
@@ -223,9 +213,9 @@ One thing that looked like a defect was not. Maya's employer comes back in trans
 
 The assistant is live - `4d255930-3056-40b3-aa8e-bd31f4f608d3`, six tools attached, `scripts/verify_live.mjs` passing twenty-one checks against the committed files - so what follows is what genuinely is not here.
 
-**No phone call to an Indian mobile.** Vapi's free numbers are US-national and cannot dial internationally; placing a real call to a `+91` handset needs an imported Twilio, Vonage or Telnyx number and a funded balance. `scripts/place_call.mjs` reports that rather than failing obscurely. The demo is a browser call through `/webcall` instead: the same assistant, the same tools, the same webhook and the same audit log, over WebRTC instead of a carrier leg. The gap is a telephony credential, not behaviour.
+**No phone call to an Indian mobile.** Vapi's free numbers are US-national and cannot dial internationally; placing a real call to a `+91` handset needs an imported Twilio, Vonage or Telnyx number and a funded balance. The demo is a browser call through `/webcall` instead: the same assistant, the same tools, the same webhook and the same audit log, over WebRTC instead of a carrier leg. The gap is a telephony credential, not behaviour.
 
 **An ephemeral public URL.** The webhook host is a Cloudflare quick tunnel, which is why `scripts/stamp_host.mjs` exists at all - the hostname changes every time the tunnel restarts, and eight files reference it. Production would put the tool server behind a stable HTTPS origin with the same Bearer credential and a signed body.
 
-**The recording is captured by hand.** `TASK2_RUNBOOK.md` is the ordered path through that last mile and `SUBMISSION_CHECKLIST.md` tracks what remains.
+**The recording is captured by hand.** There is no automated capture step: the call is spoken live in the browser console with the audit tail on screen beside it, and the resulting file is linked at the top of this README.
 
