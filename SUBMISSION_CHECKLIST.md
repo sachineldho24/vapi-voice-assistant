@@ -132,6 +132,8 @@ one above it passed.
 - [ ] Re-export `HLD_Document.pdf` and `HLD_Document.docx` from `HLD_Document.md`
       **after all prose is final**: `python scripts/render_hld.py`. It embeds
       `architecture.png`, `state_machine.png` and `auth_sequence.png` automatically.
+      Then re-copy the PDF into `web/` so the public page is not serving a stale one:
+      `Copy-Item HLD_Document.pdf web\HLD_Document.pdf -Force`.
 - [ ] `python scripts/make_archive.py` - it refuses to finish if an entry is stale
       against its source or if `.env` or `logs/` leaked in, so run it after the last
       edit, not before.

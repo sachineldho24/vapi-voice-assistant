@@ -35,6 +35,7 @@ Implementation and tests
 - `test_cases.json` - 28 functional, compliance and red-team cases with `must_call` / `must_not_call` / `forbidden_phrases`.
 - `test_webhook.ps1`, `test_webhook.sh` - curl-level auth-lock smoke test. Both read `WEBHOOK_TOKEN` from `.env` when the shell does not set one, so the protected local endpoint can be exercised without handling the token by hand; `BASE` retargets them at the public URL.
 - `webcall.html` - browser call console served at `/webcall`: live transcript beside the tool-call stream, so the auth lock is visible while the call happens.
+- `web/` - a deployable static copy for a public URL: `web/index.html` is the project page, `web/call.html` is the same call console, and the three diagrams and the HLD PDF sit beside them. No build step and no server - the console talks to Vapi directly from the browser, so it only needs HTTPS for microphone access. `vercel.json` points a Vercel project at this directory.
 - `package.json`, `.env.example` - dependencies and configuration.
 
 Scripts
